@@ -72,13 +72,23 @@ impl StringCut for String{
     }
 
     fn after_str(&self, index: &str) -> Option<&str> {
-        Some(&self[self.find(index)?..self.len()])
+        let start = self.find(index)? + index.len();
+        let end = self.len();
+        if start < end {
+            Some(&self[start..end])
+        } else {
+            None
+        }
     }
 
-    fn between_str(&self, start: &str, end: &str) -> Option<&str> {
-        let start = self.find(start)?;
-        let after = &self[start..self.len()];
-        let end = after.find(end)?;
+    fn between_str(&self, start_str: &str, end_str: &str) -> Option<&str> {
+        let start = self.find(start_str)? + start_str.len();
+        let len = self.len();
+        if len <= start {
+            return None;
+        }
+        let after = &self[(start + start_str.len())..len];
+        let end = after.find(end_str)?;
         Some(&self[start..end])
     }
 
@@ -114,13 +124,23 @@ impl StringCut for &str{
     }
 
     fn after_str(&self, index: &str) -> Option<&str> {
-        Some(&self[self.find(index)?..self.len()])
+        let start = self.find(index)? + index.len();
+        let end = self.len();
+        if start < end {
+            Some(&self[start..end])
+        } else {
+            None
+        }
     }
 
-    fn between_str(&self, start: &str, end: &str) -> Option<&str> {
-        let start = self.find(start)?;
-        let after = &self[start..self.len()];
-        let end = after.find(end)?;
+    fn between_str(&self, start_str: &str, end_str: &str) -> Option<&str> {
+        let start = self.find(start_str)? + start_str.len();
+        let len = self.len();
+        if len <= start {
+            return None;
+        }
+        let after = &self[(start + start_str.len())..len];
+        let end = after.find(end_str)?;
         Some(&self[start..end])
     }
 
@@ -146,5 +166,58 @@ impl StringCut for &str{
         } else {
             None
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_char() {
+        assert_eq!("rollerisation".get_char(2), Some('l'));
+        assert_eq!("rollerisation".get_char(20), None);
+        assert_eq!("rollerisation".get_char(0), Some('r'));
+    }
+
+    #[test]
+    fn test_get_byte() {
+        assert_eq!("rollerisation".get_byte(2), Some(&('l' as u8)));
+        assert_eq!("rollerisation".get_byte(20), None);
+        assert_eq!("rollerisation".get_byte(0), Some(&('r' as u8)));
+    }
+
+    #[test]
+    fn test_before() {
+        assert_eq!("rollerisation".before(20), None);
+        assert_eq!("rollerisation".before(6), Some("roller"));
+    }
+
+    #[test]
+    fn test_after() {
+        assert_eq!("rollerisation".after(20), None);
+        assert_eq!("rollerisation".after(6), Some("isation"));
+    }
+
+    #[test]
+    fn test_between() {
+        assert_eq!("rollerisation".between(0,20), None);
+        assert_eq!("rollerisation".between(0,6), Some("roller"));
+        assert_eq!("rollerisation".between(7,6), None);
+        assert_eq!("rollerisation".between(6,6), None);
+        assert_eq!("rollerisation".between(2,6), Some("ller"));
+    }
+
+    #[test]
+    fn test_before_str() {
+        assert_eq!("rollerisation".before_str("Roll"), None);
+        assert_eq!("rollerisation".before_str("risa"), Some("rolle"));
+    }
+
+    #[test]
+    fn test_after_str() {
+        assert_eq!("rollerisation".after_str("Roll"), None);
+        assert_eq!("rollerisation".after_str("risa"), Some("tion"));
     }
 }
